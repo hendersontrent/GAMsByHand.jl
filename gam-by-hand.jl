@@ -8,7 +8,7 @@
 # Author: Trent Henderson, 7 October 2021
 #----------------------------------------
 
-using Random, Distributions, GLM, Plots
+using Random, Distributions, DataFrames, GLM, Plots
 
 # Simulate data
 
@@ -25,7 +25,9 @@ end
 # Plot data
 
 gr()
-plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.4, markercolor = :black)
+myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black)
+
+display(myPlot)
 
 #--------------- GAM routines ---------------
 
@@ -38,10 +40,18 @@ l = 1
 
 # Generate polynomial splines
 
-SplineMatrix = zeros(size(x, 1), size(knots, 1))
+SplineMatrix = zeros(size(x, 1), size(knots, 1) + 1)
+
+# Add a column of ones for intercept
 
 for i in 1:size(SplineMatrix, 1)
-    for j in 1:size(SplineMatrix, 2)
+    SplineMatrix[i, size(SplineMatrix, 2)] = 1
+end
+
+# Fill remainder of the matrix
+
+for i in 1:size(SplineMatrix, 1)
+    for j in 1:(size(SplineMatrix, 2) - 1)
         if x[i] >= knots[j]
             SplineMatrix[i, j] = (x[i] - knots[j]) ^ l 
         else
@@ -50,17 +60,25 @@ for i in 1:size(SplineMatrix, 1)
     end
 end
 
-
-
 # Plot
 
+for i in 1:size(SplineMatrix, 2)
+    plot!(x, SplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
+end
 
+display(myPlot)
 
 #-------------------
 # Fit a linear model
 # for each basis
 # function
 #-------------------
+
+# Convert to DataFrame for lm
+
+bs = DataFrame(SplineMatrix, :auto)
+bs = bs[!, [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
+bs = rename!(bs, :x11 => :int)
 
 lmMod = lm(@formula(y ~ 0 + x), SplineMatrix)
 
@@ -122,7 +140,7 @@ function PolynomialSplineFit(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
 
     if doPlot == true
         gr()
-        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.4, markercolor = :black)
+        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black)
         return myPlot
     else
         return BasisMatix
