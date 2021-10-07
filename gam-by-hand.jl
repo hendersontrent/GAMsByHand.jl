@@ -116,22 +116,43 @@ display(myPlot2)
 
 # Multiply each basis function by its coefficient
 
-ScaledSplineMatrix = SplineMatrix
 knotIndex = collect(1:1:10)
 numRepeats = round(Int, size(SplineMatrix, 1) / size(knotIndex, 1))
 knotVector = repeat(knotIndex, numRepeats)
+ScaledSplineMatrix = ScaledSplineMatrix .* coefs[knotVector - 1]
+coefs2 = coefs[2:size(coefs, 1)]
+ScaledSplineMatrix = SplineMatrix
 
 for i in 1:size(ScaledSplineMatrix, 1)
-    ScaledSplineMatrix[i, :] = ScaledSplineMatrix[:, i] .* coefs[i]
+    for j in 1:size(ScaledSplineMatrix, 2)
+        ScaledSplineMatrix[i, j] = ScaledSplineMatrix[i, j] * coefs2[knotVector[i]]
+    end
 end
 
-#----------------------
-# Switch to polynomial
-# degree of 3 for cubic
-# basis spline-esque fit
-#----------------------
+# Re-plot
 
-# Functionalise all of the above and redo
+myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+
+display(myPlot2)
+
+# Need to filter x to just each basis for appropriate plot length
+
+for i in 2:size(ScaledSplineMatrix, 2)
+    if i == size(knots, 1)
+        plot!(x[x .> knots[i - 1]], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
+    else
+        plot!(x[(x .> knots[i - 1] && x .< knots[(i - 1) + 1])], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
+    end
+end
+
+display(myPlot2)
+
+#-------------------------------------------
+# Switch to polynomial degree of 3 for cubic
+# basis spline-esque fit
+#-------------------------------------------
+
+# NOTE: Try https://stackoverflow.com/questions/58265223/polynomial-regression-in-julia-glm
 
 """
     FitPolynomialSpline(x, y, k, l, doPlot)
@@ -152,9 +173,11 @@ Arguments:
 """
 function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doPlot = false)
 
-    # Check knot argument
+    # Check arguments
 
     k < size(x, 1) || error("Number of knots `k` should be less than length of input `x`.")
+
+    size(x, 1) == size(y, 1) || error("`x` and `y` should be the same length.")
 
     #---------- Basis function knot operations ----------
 
@@ -200,7 +223,7 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
         coefs[i] = GLM.coef(m₁)[i]
     end
 
-    # Multiply each basis function by the coefficient
+    # Multiply each basis function by its coefficient
 
     ScaledSplineMatrix
 
