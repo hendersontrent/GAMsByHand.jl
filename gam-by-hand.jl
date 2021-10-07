@@ -114,12 +114,15 @@ myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2
 
 display(myPlot2)
 
-# Multiply each basis function by the coefficient
+# Multiply each basis function by its coefficient
 
 ScaledSplineMatrix = SplineMatrix
+knotIndex = collect(1:1:10)
+numRepeats = round(Int, size(SplineMatrix, 1) / size(knotIndex, 1))
+knotVector = repeat(knotIndex, numRepeats)
 
-for i in 1:size(ScaledSplineMatrix, 2)
-    ScaledSplineMatrix[:, i] = ScaledSplineMatrix[:, i] * coefs[i]
+for i in 1:size(ScaledSplineMatrix, 1)
+    ScaledSplineMatrix[i, :] = ScaledSplineMatrix[:, i] .* coefs[i]
 end
 
 #----------------------
