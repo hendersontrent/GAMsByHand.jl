@@ -138,10 +138,10 @@ display(myPlot2)
 # Need to filter x to just each basis for appropriate plot length
 
 for i in 2:size(ScaledSplineMatrix, 2)
-    if i == size(knots, 1)
+    if (i - 1) == size(knots, 1)
         plot!(x[x .> knots[i - 1]], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
     else
-        plot!(x[(x .> knots[i - 1] && x .< knots[(i - 1) + 1])], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
+        plot!(x[(x .> knots[i - 1]) .& (x .< knots[i])], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
     end
 end
 
