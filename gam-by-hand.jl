@@ -8,7 +8,7 @@
 # Author: Trent Henderson, 7 October 2021
 #----------------------------------------
 
-using Random, Distributions, DataFrames, GLM, Plots
+using Random, Distributions, GLM, Plots
 
 # Simulate data
 
@@ -60,6 +60,11 @@ for i in 1:size(SplineMatrix, 1)
     end
 end
 
+# Reorder columns to get intercept first
+
+ordering = vcat(size(SplineMatrix, 2), 1:(size(SplineMatrix, 2) - 1))
+SplineMatrix = SplineMatrix[:, ordering]
+
 # Plot
 
 for i in 1:size(SplineMatrix, 2)
@@ -74,13 +79,9 @@ display(myPlot)
 # function
 #-------------------
 
-# Convert to DataFrame for lm
+# Fit model
 
-bs = DataFrame(SplineMatrix, :auto)
-bs = bs[!, [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
-bs = rename!(bs, :x11 => :int)
-
-lmMod = lm(@formula(y ~ 0 + x), SplineMatrix)
+m₁ = lm(SplineMatrix, y)
 
 # Pull out coefficients
 
