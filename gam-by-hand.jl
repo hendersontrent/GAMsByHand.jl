@@ -127,10 +127,7 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
 
     k < size(x, 1) || error("Number of knots `k` should be less than length of input `x`.")
 
-    #--------------------
-    # Do knot operations 
-    # for basis functions
-    #--------------------
+    #---------- Basis function knot operations ----------
 
     # Genrate sequence of knots
     
@@ -163,10 +160,7 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
     ordering = vcat(size(SplineMatrix, 2), 1:(size(SplineMatrix, 2) - 1))
     SplineMatrix = SplineMatrix[:, ordering]
 
-    #---------------------
-    # Fit linear model and 
-    # extract coefficients
-    #---------------------
+    #---------- Linear model fit and coefficients ----------
 
     # Fit model
 
@@ -181,9 +175,7 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
 
     
 
-    #--------------
-    # Final returns
-    #--------------
+    #---------- Final returns ----------
 
     if doPlot == true
         gr()
