@@ -25,7 +25,7 @@ end
 # Plot data
 
 gr()
-plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.4)
+plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.4, markercolor = :black)
 
 #--------------- GAM routines ---------------
 
@@ -38,17 +38,19 @@ l = 1
 
 # Generate polynomial splines
 
-SplineMatrix = Array{Float64}(undef, size(x, 1), size(knots, 1))
+SplineMatrix = zeros(size(x, 1), size(knots, 1))
 
-for i in 1:size(x, 1)
-    for j in 1:size(knots, 1)
+for i in 1:size(SplineMatrix, 1)
+    for j in 1:size(SplineMatrix, 2)
         if x[i] >= knots[j]
-            SplineMatrix[i][j] = (x[i] - knots[j]) ^ l 
+            SplineMatrix[i, j] = (x[i] - knots[j]) ^ l 
         else
-            SplineMatrix[i][j] = 0.0
+            SplineMatrix[i, j] = 0.0
         end
     end
 end
+
+
 
 # Plot
 
@@ -57,9 +59,10 @@ end
 #-------------------
 # Fit a linear model
 # for each basis
+# function
 #-------------------
 
-lmMod = lm(@formula(y ~ .-1), SplineMatrix)
+lmMod = lm(@formula(y ~ 0 + x), SplineMatrix)
 
 # Pull out coefficients
 
@@ -91,14 +94,14 @@ function PolynomialSplineFit(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
     
     knots = collect(range(minimum(x), stop = maximum(x), length = k))
 
-    SplineMatrix = Array{Float64}(undef, size(x, 1), size(knots, 1))
+    SplineMatrix = zeros(size(x, 1), size(k, 1))
 
-    for i in 1:size(x, 1)
-        for j in 1:size(knots, 1)
+    for i in 1:size(SplineMatrix, 1)
+        for j in 1:size(SplineMatrix, 2)
             if x[i] >= knots[j]
-                SplineMatrix[i][j] = (x[i] - knots[j]) ^ l 
+                SplineMatrix[i, j] = (x[i] - knots[j]) ^ l 
             else
-                SplineMatrix[i][j] = 0.0
+                SplineMatrix[i, j] = 0.0
             end
         end
     end
@@ -119,7 +122,7 @@ function PolynomialSplineFit(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
 
     if doPlot == true
         gr()
-        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.4)
+        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.4, markercolor = :black)
         return myPlot
     else
         return BasisMatix
