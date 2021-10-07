@@ -90,9 +90,37 @@ end
 
 # Multiply each basis function by the coefficient
 
+ScaledSplineMatrix = SplineMatrix
 
+for i in 1:size(ScaledSplineMatrix, 2)
+    ScaledSplineMatrix[:, i] = ScaledSplineMatrix[:, i] * coefs[i]
+end
+
+knotGroup = round.(Int, zeros(size(x)))
+
+for i in 1:size(x, 1)
+    for j in 1:size(knots, 1)
+        if j == size(knots, 1)
+            if x[i] > knots[j]
+                knotGroup[i] = j
+            else
+            end
+        else
+            if x[i] > knots[j] && x[i] < (knots[j] + 1)
+                knotGroup[i] = j
+            else
+            end
+        end
+    end
+end
+
+knotGroup = string.("Knot ", knotGroup)
 
 # Plot
+
+myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.3, legend = false)
+
+display(myPlot2)
 
 
 
@@ -173,16 +201,16 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
 
     # Multiply each basis function by the coefficient
 
-    
+    ScaledSplineMatrix
 
     #---------- Final returns ----------
 
     if doPlot == true
         gr()
-        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black)
+        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black, title = string("Polynomial spline fit with ", k, " knots and polynomial order ", l))
         return myPlot
     else
-        return BasisMatix
+        return ScaledSplineMatrix
     end
 end
 
