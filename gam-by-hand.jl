@@ -88,13 +88,7 @@ for i in 1:size(SplineMatrix, 2)
     coefs[i] = GLM.coef(m₁)[i]
 end
 
-# Multiply each basis function by the coefficient
-
-ScaledSplineMatrix = SplineMatrix
-
-for i in 1:size(ScaledSplineMatrix, 2)
-    ScaledSplineMatrix[:, i] = ScaledSplineMatrix[:, i] * coefs[i]
-end
+# Get the knot each data point corresponds to
 
 knotGroup = round.(Int, zeros(size(x)))
 
@@ -114,15 +108,19 @@ for i in 1:size(x, 1)
     end
 end
 
-knotGroup = string.("Knot ", knotGroup)
+# Progress update plot
 
-# Plot
-
-myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.3, legend = false)
+myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
 
 display(myPlot2)
 
+# Multiply each basis function by the coefficient
 
+ScaledSplineMatrix = SplineMatrix
+
+for i in 1:size(ScaledSplineMatrix, 2)
+    ScaledSplineMatrix[:, i] = ScaledSplineMatrix[:, i] * coefs[i]
+end
 
 #----------------------
 # Switch to polynomial
@@ -135,7 +133,7 @@ display(myPlot2)
 """
     FitPolynomialSpline(x, y, k, l, doPlot)
 
-    Compute a basic univariate polynomial spline fit to mimic the machinery of a generalised additive model (GAM) using basis functions composed of linear models over a given specification of knots and polynomial order.
+    Compute a basic univariate additive polynomial basis function spline fit to mimic the machinery of a generalised additive model (GAM). Uses basis functions composed of linear models over a given specification of knots and polynomial order. This is a functionalised generalisation to infinite knot and polynomial order space of the original post by Michael Clark at https://m-clark.github.io/generalized-additive-models/technical.html.
 
 Usage:
 ```julia-repl
