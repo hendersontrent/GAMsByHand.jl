@@ -25,7 +25,7 @@ end
 # Plot data
 
 gr()
-myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black)
+myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.5, markercolor = :black)
 
 display(myPlot)
 
@@ -129,20 +129,18 @@ for i in 1:size(ScaledSplineMatrix, 1)
     end
 end
 
+# Create array with knot groupings to filter by for range restricted lines
+
+xKnot = hcat(x, knotGroup)
+
 # Re-plot
 
 myPlot3 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
 
 display(myPlot3)
 
-# Need to filter x to just each basis for appropriate plot length
-
 for i in 2:size(ScaledSplineMatrix, 2)
-    if (i - 1) == size(knots, 1)
-        plot!(x[x .> knots[i - 1]], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
-    else
-        plot!(x[(x .> knots[i - 1]) .& (x .< knots[i])], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
-    end
+    plot!(xKnot[(xKnot[:, 2] .== convert(Float64, (i - 1))), :], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
 end
 
 display(myPlot3)
