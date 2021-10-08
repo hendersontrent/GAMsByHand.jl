@@ -185,7 +185,6 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
     # Check arguments
 
     k < size(x, 1) || error("Number of knots `k` should be less than length of input `x`.")
-
     size(x, 1) == size(y, 1) || error("`x` and `y` should be the same length.")
 
     #---------- Basis function knot operations ----------
@@ -194,11 +193,9 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
     
     knots = collect(range(minimum(x), stop = maximum(x), length = k))
 
-    # Instantiate matrix
+    # Instantiate matrix and add a column of ones for intercept
 
     SplineMatrix = zeros(size(x, 1), size(knots, 1) + 1)
-
-    # Add a column of ones for intercept
 
     for i in 1:size(SplineMatrix, 1)
         SplineMatrix[i, size(SplineMatrix, 2)] = 1
@@ -286,6 +283,6 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
     return myPlot
 end
 
-# Fit the function
+# Run the function
 
 FitPolynomialSpline(x, y, 10, 1)
