@@ -116,26 +116,26 @@ display(myPlot2)
 
 # Multiply each basis function by its coefficient
 
-ScaledSplineMatrix = SplineMatrix
+ScaledMatrix = SplineMatrix
 
-for i in 1:size(ScaledSplineMatrix, 1)
-    for j in 1:size(ScaledSplineMatrix, 2)
-        ScaledSplineMatrix[i, j] = ScaledSplineMatrix[i, j] * coefs[j]
+for i in 1:size(ScaledMatrix, 1)
+    for j in 1:size(ScaledMatrix, 2)
+        ScaledMatrix[i, j] = ScaledMatrix[i, j] * coefs[j]
     end
 end
 
 # Create array with knot groupings to filter by for range restricted lines
 
-xKnot = hcat(x, knotGroup)
+ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
 
 # Re-plot
 
-myPlot3 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+myPlot3 = plot(ScaledMatrix[:, (size(coefs, 1) + 1)], ScaledMatrix[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
 
 display(myPlot3)
 
-for i in 2:size(ScaledSplineMatrix, 2)
-    plot!(xKnot[(xKnot[:, 2] .== convert(Float64, (i - 1))), :], ScaledSplineMatrix[:, i], color = palette(:default)[i], seriestype = :line, legend = false)
+for i in 2:(size(ScaledMatrix, 2) - 3)
+    plot!(ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), (size(ScaledMatrix, 2) - 2)], ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), i], color = palette(:default)[i], seriestype = :line, legend = false)
 end
 
 display(myPlot3)
