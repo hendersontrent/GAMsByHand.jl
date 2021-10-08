@@ -147,13 +147,13 @@ display(myPlot3)
 # NOTE: Try https://stackoverflow.com/questions/58265223/polynomial-regression-in-julia-glm
 
 """
-    FitPolynomialSpline(x, y, k, l, doPlot)
+    FitPolynomialSpline(x, y, k, l)
 
     Compute a basic univariate additive polynomial basis function spline fit to mimic the machinery of a generalised additive model (GAM). Uses basis functions composed of linear models over a given specification of knots and polynomial order. This is a functionalised generalisation to infinite knot and polynomial order space of the original post by Michael Clark at https://m-clark.github.io/generalized-additive-models/technical.html.
 
 Usage:
 ```julia-repl
-FitPolynomialSpline(x, y, k, l, doPlot)
+FitPolynomialSpline(x, y, k, l)
 ```
 
 Arguments:
@@ -161,9 +161,8 @@ Arguments:
 - `y` : Response variable.
 - `k` : Number of knots to use.
 - `l` : Order of the polynomial.
-- `doPlot` : Whether to plot the data or return the data matrix.
 """
-function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doPlot = false)
+function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3)
 
     # Check arguments
 
@@ -215,19 +214,46 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3, doP
         coefs[i] = GLM.coef(m₁)[i]
     end
 
+    # Get the knot each data point corresponds to
+
+    knotGroup = round.(Int, zeros(size(x)))
+
+    for i in 1:size(x, 1)
+        for j in 1:size(knots, 1)
+            if j == size(knots, 1)
+                if x[i] > knots[j]
+                    knotGroup[i] = j
+                else
+                end
+            else
+                if x[i] > knots[j] && x[i] < (knots[j] + 1)
+                    knotGroup[i] = j
+                else
+                end
+            end
+        end
+    end
+
     # Multiply each basis function by its coefficient
 
-    ScaledSplineMatrix
+    ScaledMatrix = SplineMatrix
 
-    #---------- Final returns ----------
-
-    if doPlot == true
-        gr()
-        myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black, title = string("Polynomial spline fit with ", k, " knots and polynomial order ", l))
-        return myPlot
-    else
-        return ScaledSplineMatrix
+    for i in 1:size(ScaledMatrix, 1)
+        for j in 1:size(ScaledMatrix, 2)
+            ScaledMatrix[i, j] = ScaledMatrix[i, j] * coefs[j]
+        end
     end
+
+    # Create array with knot groupings to filter by for range restricted lines
+
+    ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
+
+    #---------- Plot ----------
+
+    gr()
+    myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black, title = string("Polynomial spline fit with ", k, " knots and polynomial order ", l))
+    
+    return myPlot
 end
 
-FitPolynomialSpline(x, y, 9, 3, true)
+FitPolynomialSpline(x, y, 9, 3)
