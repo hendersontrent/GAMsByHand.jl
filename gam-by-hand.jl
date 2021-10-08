@@ -130,7 +130,7 @@ ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
 
 # Re-plot
 
-myPlot3 = plot(ScaledMatrix[:, (size(coefs, 1) + 1)], ScaledMatrix[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+myPlot3 = plot(ScaledMatrix[:, (size(coefs, 1) + 1)], ScaledMatrix[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.3, legend = false)
 
 display(myPlot3)
 
