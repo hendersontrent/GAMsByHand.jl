@@ -110,7 +110,7 @@ end
 
 # Progress update plot
 
-myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.7, legend = :topright, legendfontsize = 6, legendtitle = "Knot", legendtitlefont = (7))
 
 display(myPlot2)
 
@@ -131,9 +131,9 @@ end
 
 # Re-plot
 
-myPlot2 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+myPlot3 = plot(x, y, group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
 
-display(myPlot2)
+display(myPlot3)
 
 # Need to filter x to just each basis for appropriate plot length
 
@@ -145,7 +145,7 @@ for i in 2:size(ScaledSplineMatrix, 2)
     end
 end
 
-display(myPlot2)
+display(myPlot3)
 
 #-------------------------------------------
 # Switch to polynomial degree of 3 for cubic
