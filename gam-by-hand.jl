@@ -139,6 +139,20 @@ end
 
 display(myPlot3)
 
+#------------------------
+# Sum the basis functions
+# to get better smoothed
+# approximation
+#------------------------
+
+# Calculations
+
+
+
+# Re-plot
+
+
+
 #-------------------------------------------
 # Switch to polynomial degree of 3 for cubic
 # basis spline-esque fit
