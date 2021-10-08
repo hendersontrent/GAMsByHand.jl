@@ -116,16 +116,11 @@ display(myPlot2)
 
 # Multiply each basis function by its coefficient
 
-knotIndex = collect(1:1:10)
-numRepeats = round(Int, size(SplineMatrix, 1) / size(knotIndex, 1))
-knotVector = repeat(knotIndex, numRepeats)
-ScaledSplineMatrix = ScaledSplineMatrix .* coefs[knotVector - 1]
-coefs2 = coefs[2:size(coefs, 1)]
 ScaledSplineMatrix = SplineMatrix
 
 for i in 1:size(ScaledSplineMatrix, 1)
     for j in 1:size(ScaledSplineMatrix, 2)
-        ScaledSplineMatrix[i, j] = ScaledSplineMatrix[i, j] * coefs2[knotVector[i]]
+        ScaledSplineMatrix[i, j] = ScaledSplineMatrix[i, j] * coefs[j]
     end
 end
 
