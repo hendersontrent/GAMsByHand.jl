@@ -131,27 +131,31 @@ ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
 
 myPlot3 = plot(ScaledMatrix[:, (size(coefs, 1) + 1)], ScaledMatrix[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.3, legend = false)
 
-display(myPlot3)
-
 for i in 2:(size(ScaledMatrix, 2) - 3)
     plot!(ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), (size(ScaledMatrix, 2) - 2)], ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), i], color = palette(:default)[i - 1], seriestype = :line, legend = false)
 end
 
 display(myPlot3)
 
-#------------------------
-# Sum the basis functions
-# to get better smoothed
-# approximation
-#------------------------
+#-------------------------------
+# Sum the basis functions to get 
+# better smoothed approximation
+#-------------------------------
 
-# Calculations
+# Get fitted (summed) values from the linear model that form the basic spline
 
-
+fittedValues = predict(m₁)
+ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
 
 # Re-plot
 
+myPlot4 = plot(ScaledMatrix2[:, (size(coefs, 1) + 1)], ScaledMatrix2[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
 
+for i in 1:size(knots, 1)
+    plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+end
+
+display(myPlot4)
 
 #-------------------------------------------
 # Switch to polynomial degree of 3 for cubic
@@ -176,7 +180,7 @@ Arguments:
 - `k` : Number of knots to use.
 - `l` : Order of the polynomial.
 """
-function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3)
+function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
 
     # Check arguments
 
@@ -262,12 +266,26 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 3)
 
     ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
 
+    #---------- Sum fitted model values for spline -----------
+
+    # Get fitted (summed) values from the linear model that form the basic spline
+
+    fittedValues = predict(m₁)
+    ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
+
     #---------- Plot ----------
 
     gr()
-    myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.3, markercolor = :black, title = string("Polynomial spline fit with ", k, " knots and polynomial order ", l))
+    
+    myPlot = plot(ScaledMatrix2[:, (size(coefs, 1) + 1)], ScaledMatrix2[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+
+    for i in 1:size(knots, 1)
+        plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+    end
     
     return myPlot
 end
 
-FitPolynomialSpline(x, y, 9, 3)
+# Fit the function
+
+FitPolynomialSpline(x, y, 10, 1)
