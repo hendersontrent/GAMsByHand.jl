@@ -135,7 +135,7 @@ myPlot3 = plot(ScaledMatrix[:, (size(coefs, 1) + 1)], ScaledMatrix[:, (size(coef
 display(myPlot3)
 
 for i in 2:(size(ScaledMatrix, 2) - 3)
-    plot!(ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), (size(ScaledMatrix, 2) - 2)], ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), i], color = palette(:default)[i], seriestype = :line, legend = false)
+    plot!(ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), (size(ScaledMatrix, 2) - 2)], ScaledMatrix[(ScaledMatrix[:, size(ScaledMatrix, 2)] .== convert(Float64, (i - 1))), i], color = palette(:default)[i - 1], seriestype = :line, legend = false)
 end
 
 display(myPlot3)
