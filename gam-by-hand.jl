@@ -26,7 +26,6 @@ end
 
 gr()
 myPlot = plot(x, y, seriestype = :scatter, legend = false, markeralpha = 0.5, markercolor = :black)
-
 display(myPlot)
 
 #--------------- GAM routines ---------------
@@ -128,7 +127,7 @@ end
 
 ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
 
-# Re-plot
+# Re-plot with lines
 
 myPlot3 = plot(ScaledMatrix[:, (size(coefs, 1) + 1)], ScaledMatrix[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.3, legend = false)
 
