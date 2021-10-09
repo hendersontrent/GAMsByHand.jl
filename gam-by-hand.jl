@@ -162,7 +162,7 @@ display(myPlot4)
 # basis spline-esque fit
 #-------------------------------------------
 
-# NOTE: Try https://stackoverflow.com/questions/58265223/polynomial-regression-in-julia-glm
+# NOTE: Try https://juliamath.github.io/Polynomials.jl/stable/
 
 """
     FitPolynomialSpline(x, y, k, l)
