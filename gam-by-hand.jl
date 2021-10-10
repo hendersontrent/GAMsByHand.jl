@@ -8,7 +8,7 @@
 # Author: Trent Henderson, 7 October 2021
 #----------------------------------------
 
-using Random, Distributions, GLM, Plots, StatsBase
+using Random, Distributions, GLM, Plots, StatsBase, DataFrames
 
 # Simulate data
 
@@ -77,8 +77,6 @@ display(myPlot)
 # for each basis
 # function
 #-------------------
-
-# Fit model and extract coefficients
 
 m₁ = lm(SplineMatrix, y)
 coefs = zeros(size(SplineMatrix, 2))
@@ -168,9 +166,7 @@ display(myPlot4)
 # https://juliastats.org/StatsModels.jl/stable/internals/#An-example-of-custom-syntax:-poly-1
 #----------------------
 
-# Syntax: best practice to define a _new_ function
-
-poly(x, n) = x^n
+# Function: poly(x, n) = x^n
 
 # Type of model where syntax applies: here this applies to any model type
 
@@ -228,6 +224,63 @@ StatsModels.termvars(p::PolyTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::PolyTerm) = p.deg
 
 StatsBase.coefnames(p::PolyTerm) = coefnames(p.term) .* "^" .* string.(1:p.deg)
+
+#----------------
+# Quick test case
+#----------------
+
+SplineMatrixDF = hcat(y, SplineMatrix)
+SplineMatrixDF = DataFrame(SplineMatrixDF, :auto)
+SplineMatrixDF = rename!(SplineMatrixDF, :x1 => :y)
+MyNames = names(SplineMatrixDF)
+MySymbols = Symbol.(MyNames[2:size(MyNames, 1)])
+poly_vars = tuple(MySymbols...,)
+poly_deg = 3 # l
+poly_formula = term(:y) ~ term(0) + poly.(poly_vars, poly_deg)
+m₁ = fit(LinearModel, poly_formula, SplineMatrixDF)
+coefs = DataFrame(coeftable(m₁))
+orderCoefs = collect(poly_deg:poly_deg:((size(SplineMatrixDF, 2) - 1) * 3))
+orderCoefsFiltered = coefs[filter(x -> (x in orderCoefs), eachindex(coefs))]
+
+knotGroup = round.(Int, zeros(size(x)))
+
+for i in 1:size(x, 1)
+    for j in 1:size(knots, 1)
+        if j == size(knots, 1)
+            if x[i] > knots[j]
+                knotGroup[i] = j
+            else
+            end
+        else
+            if x[i] > knots[j] && x[i] < (knots[j] + 1)
+                knotGroup[i] = j
+            else
+            end
+        end
+    end
+end
+
+ScaledMatrix = SplineMatrix
+
+for i in 1:size(ScaledMatrix, 1)
+    for j in 1:size(ScaledMatrix, 2)
+        ScaledMatrix[i, j] = ScaledMatrix[i, j] * coefs[j]
+    end
+end
+
+ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
+fittedValues = predict(m₁)
+ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
+
+# Re-plot
+
+myPlot5 = plot(ScaledMatrix2[:, (size(orderCoefs, 1) + 1)], ScaledMatrix2[:, (size(orderCoefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+
+for i in 1:size(knots, 1)
+    plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+end
+
+display(myPlot5)
 
 #----------------------
 # Functionalise all of
