@@ -8,7 +8,7 @@
 # Author: Trent Henderson, 7 October 2021
 #----------------------------------------
 
-using Random, Distributions, GLM, Plots, StatsBase
+using Random, Distributions, GLM, Plots, StatsBase, DataFrames
 
 # Simulate data
 
@@ -77,8 +77,6 @@ display(myPlot)
 # for each basis
 # function
 #-------------------
-
-# Fit model and extract coefficients
 
 m₁ = lm(SplineMatrix, y)
 coefs = zeros(size(SplineMatrix, 2))
@@ -168,9 +166,7 @@ display(myPlot4)
 # https://juliastats.org/StatsModels.jl/stable/internals/#An-example-of-custom-syntax:-poly-1
 #----------------------
 
-# Syntax: best practice to define a _new_ function
-
-poly(x, n) = x^n
+# Function: poly(x, n) = x^n
 
 # Type of model where syntax applies: here this applies to any model type
 
@@ -228,6 +224,63 @@ StatsModels.termvars(p::PolyTerm) = StatsModels.termvars(p.term)
 StatsModels.width(p::PolyTerm) = p.deg
 
 StatsBase.coefnames(p::PolyTerm) = coefnames(p.term) .* "^" .* string.(1:p.deg)
+
+#----------------
+# Quick test case
+#----------------
+
+SplineMatrixDF = hcat(y, SplineMatrix)
+SplineMatrixDF = DataFrame(SplineMatrixDF, :auto)
+SplineMatrixDF = rename!(SplineMatrixDF, :x1 => :y)
+MyNames = names(SplineMatrixDF)
+MySymbols = Symbol.(MyNames[2:size(MyNames, 1)])
+poly_vars = tuple(MySymbols...,)
+poly_deg = 3 # l
+poly_formula = term(:y) ~ term(0) + poly.(poly_vars, poly_deg)
+m₁ = fit(LinearModel, poly_formula, SplineMatrixDF)
+coefs = DataFrame(coeftable(m₁))
+orderCoefs = collect(poly_deg:poly_deg:((size(SplineMatrixDF, 2) - 1) * 3))
+orderCoefsFiltered = coefs[filter(x -> (x in orderCoefs), eachindex(coefs))]
+
+knotGroup = round.(Int, zeros(size(x)))
+
+for i in 1:size(x, 1)
+    for j in 1:size(knots, 1)
+        if j == size(knots, 1)
+            if x[i] > knots[j]
+                knotGroup[i] = j
+            else
+            end
+        else
+            if x[i] > knots[j] && x[i] < (knots[j] + 1)
+                knotGroup[i] = j
+            else
+            end
+        end
+    end
+end
+
+ScaledMatrix = SplineMatrix
+
+for i in 1:size(ScaledMatrix, 1)
+    for j in 1:size(ScaledMatrix, 2)
+        ScaledMatrix[i, j] = ScaledMatrix[i, j] * orderCoefsFiltered[j]
+    end
+end
+
+ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
+fittedValues = predict(m₁)
+ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
+
+# Re-plot
+
+myPlot5 = plot(ScaledMatrix2[:, (size(orderCoefs, 1) + 1)], ScaledMatrix2[:, (size(orderCoefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+
+for i in 1:size(knots, 1)
+    plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+end
+
+display(myPlot5)
 
 #----------------------
 # Functionalise all of
@@ -289,66 +342,135 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
     ordering = vcat(size(SplineMatrix, 2), 1:(size(SplineMatrix, 2) - 1))
     SplineMatrix = SplineMatrix[:, ordering]
 
-    #---------- Linear model fit and coefficients ----------
+    #---------- Modelling and coefficient extraction -------
 
-    # Fit model
+    if l >= 2
 
-    m₁ = lm(SplineMatrix, y)
-    coefs = zeros(size(SplineMatrix, 2))
+        # Set up dynamic modelling for polynomial regression
 
-    for i in 1:size(SplineMatrix, 2)
-        coefs[i] = GLM.coef(m₁)[i]
-    end
+        SplineMatrixDF = hcat(y, SplineMatrix)
+        SplineMatrixDF = DataFrame(SplineMatrixDF, :auto)
+        SplineMatrixDF = rename!(SplineMatrixDF, :x1 => :y)
+        MyNames = names(SplineMatrixDF)
+        MySymbols = Symbol.(MyNames[2:size(MyNames, 1)])
+        poly_vars = tuple(MySymbols...,)
+        poly_deg = l
+        poly_formula = term(:y) ~ term(0) + poly.(poly_vars, poly_deg)
+        m₁ = fit(LinearModel, poly_formula, SplineMatrixDF)
 
-    # Get the knot each data point corresponds to
+        # Extract coefficients 
 
-    knotGroup = round.(Int, zeros(size(x)))
+        coefs = DataFrame(coeftable(m₁))
+        orderCoefs = collect(poly_deg:poly_deg:((size(SplineMatrixDF, 2) - 1) * 3))
+        orderCoefsFiltered = coefs[filter(x -> (x in orderCoefs), eachindex(coefs))]
 
-    for i in 1:size(x, 1)
-        for j in 1:size(knots, 1)
-            if j == size(knots, 1)
-                if x[i] > knots[j]
-                    knotGroup[i] = j
+        # Get knot groups to help plot
+        
+        knotGroup = round.(Int, zeros(size(x)))
+        
+        for i in 1:size(x, 1)
+            for j in 1:size(knots, 1)
+                if j == size(knots, 1)
+                    if x[i] > knots[j]
+                        knotGroup[i] = j
+                    else
+                    end
                 else
-                end
-            else
-                if x[i] > knots[j] && x[i] < (knots[j] + 1)
-                    knotGroup[i] = j
-                else
+                    if x[i] > knots[j] && x[i] < (knots[j] + 1)
+                        knotGroup[i] = j
+                    else
+                    end
                 end
             end
         end
-    end
 
-    # Multiply each basis function by its coefficient
-
-    ScaledMatrix = SplineMatrix
-
-    for i in 1:size(ScaledMatrix, 1)
-        for j in 1:size(ScaledMatrix, 2)
-            ScaledMatrix[i, j] = ScaledMatrix[i, j] * coefs[j]
+        # Multiply each basis by its coefficient
+        
+        ScaledMatrix = SplineMatrix
+        
+        for i in 1:size(ScaledMatrix, 1)
+            for j in 1:size(ScaledMatrix, 2)
+                ScaledMatrix[i, j] = ScaledMatrix[i, j] * orderCoefsFiltered[j]
+            end
         end
-    end
 
-    # Create array with knot groupings to filter by for range restricted lines
+        # Create a single matrix for plotting
+        
+        ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
+        fittedValues = predict(m₁)
+        ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
+        
+        #--------- Plot -----------
 
-    ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
-
-    #---------- Sum fitted model values for spline -----------
-
-    # Get fitted (summed) values from the linear model that form the basic spline
-
-    fittedValues = predict(m₁)
-    ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
-
-    #---------- Plot ----------
-
-    gr()
+        gr()
+        
+        myPlot = plot(ScaledMatrix2[:, (size(orderCoefs, 1) + 1)], ScaledMatrix2[:, (size(orderCoefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+        
+        for i in 1:size(knots, 1)
+            plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+        end
     
-    myPlot = plot(ScaledMatrix2[:, (size(coefs, 1) + 1)], ScaledMatrix2[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+    else
 
-    for i in 1:size(knots, 1)
-        plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+        # Fit model
+    
+        m₁ = lm(SplineMatrix, y)
+        coefs = zeros(size(SplineMatrix, 2))
+    
+        for i in 1:size(SplineMatrix, 2)
+            coefs[i] = GLM.coef(m₁)[i]
+        end
+    
+        # Get the knot each data point corresponds to
+    
+        knotGroup = round.(Int, zeros(size(x)))
+    
+        for i in 1:size(x, 1)
+            for j in 1:size(knots, 1)
+                if j == size(knots, 1)
+                    if x[i] > knots[j]
+                        knotGroup[i] = j
+                    else
+                    end
+                else
+                    if x[i] > knots[j] && x[i] < (knots[j] + 1)
+                        knotGroup[i] = j
+                    else
+                    end
+                end
+            end
+        end
+    
+        # Multiply each basis function by its coefficient
+    
+        ScaledMatrix = SplineMatrix
+    
+        for i in 1:size(ScaledMatrix, 1)
+            for j in 1:size(ScaledMatrix, 2)
+                ScaledMatrix[i, j] = ScaledMatrix[i, j] * coefs[j]
+            end
+        end
+    
+        # Create array with knot groupings to filter by for range restricted lines
+    
+        ScaledMatrix = hcat(ScaledMatrix, x, y, knotGroup)
+    
+        #---------- Sum fitted model values for spline -----------
+    
+        # Get fitted (summed) values from the linear model that form the basic spline
+    
+        fittedValues = predict(m₁)
+        ScaledMatrix2 = hcat(ScaledMatrix, fittedValues)
+
+        gr()
+
+        #--------- Plot -----------
+
+        myPlot = plot(ScaledMatrix2[:, (size(coefs, 1) + 1)], ScaledMatrix2[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+
+        for i in 1:size(knots, 1)
+            plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+        end
     end
     
     return myPlot
@@ -356,4 +478,5 @@ end
 
 # Run the function
 
+FitPolynomialSpline(x, y, 10, 3)
 FitPolynomialSpline(x, y, 10, 1)
