@@ -239,6 +239,7 @@ poly_deg = 3 # l
 poly_formula = term(:y) ~ term(0) + poly.(poly_vars, poly_deg)
 m₁ = fit(LinearModel, poly_formula, SplineMatrixDF)
 coefs = DataFrame(coeftable(m₁))
+coefs = Array(coefs[:, 2])
 orderCoefs = collect(poly_deg:poly_deg:((size(SplineMatrixDF, 2) - 1) * 3))
 orderCoefsFiltered = coefs[filter(x -> (x in orderCoefs), eachindex(coefs))]
 
@@ -361,6 +362,7 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
         # Extract coefficients 
 
         coefs = DataFrame(coeftable(m₁))
+        coefs = Array(coefs[:, 2])
         orderCoefs = collect(poly_deg:poly_deg:((size(SplineMatrixDF, 2) - 1) * 3))
         orderCoefsFiltered = coefs[filter(x -> (x in orderCoefs), eachindex(coefs))]
 
@@ -404,10 +406,10 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
 
         gr()
         
-        myPlot = plot(ScaledMatrix2[:, (size(orderCoefs, 1) + 1)], ScaledMatrix2[:, (size(orderCoefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+        myPlot = plot(ScaledMatrix2[:, (size(orderCoefs, 1) + 1)], ScaledMatrix2[:, (size(orderCoefs, 1) + 2)], seriestype = :scatter, markercolor = :black, markeralpha = 0.3, legend = false)
         
         for i in 1:size(knots, 1)
-            plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+            plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[1], seriestype = :line, legend = false, linewidth = 2.0)
         end
     
     else
@@ -466,10 +468,10 @@ function FitPolynomialSpline(x::Array, y::Array, k::Int64 = 5, l::Int64 = 1)
 
         #--------- Plot -----------
 
-        myPlot = plot(ScaledMatrix2[:, (size(coefs, 1) + 1)], ScaledMatrix2[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markeralpha = 0.2, legend = false)
+        myPlot = plot(ScaledMatrix2[:, (size(coefs, 1) + 1)], ScaledMatrix2[:, (size(coefs, 1) + 2)], group = knotGroup, seriestype = :scatter, markercolor = :black, markeralpha = 0.2, legend = false)
 
         for i in 1:size(knots, 1)
-            plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[i], seriestype = :line, legend = false)
+            plot!(ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), (size(ScaledMatrix2, 2) - 3)], ScaledMatrix2[(ScaledMatrix2[:, (size(ScaledMatrix2, 2) - 1)] .== convert(Float64, i)), size(ScaledMatrix2, 2)], color = palette(:default)[1], seriestype = :line, legend = false, linewidth = 2.0)
         end
     end
     
