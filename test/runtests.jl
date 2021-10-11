@@ -1,6 +1,6 @@
 using GAMsByHand
 using Test
-using Random, Distributions
+using Random, Distributions, Plots
 
 @testset "GAMsByHand.jl" begin
     
@@ -26,12 +26,12 @@ using Random, Distributions
 
     # Cubic basis
 
-    p = FitPolynomialSpline(x, y, 10, 3)
+    p = FitPolynomialBasisSpline(x, y, 10, 3)
     @test p isa Plots.Plot
 
     # Linear basis
 
-    p1 = FitPolynomialSpline(x, y, 10, 1)
+    p1 = FitPolynomialBasisSpline(x, y, 10, 1)
     @test p1 isa Plots.Plot
 
     # Coloured linear basis
